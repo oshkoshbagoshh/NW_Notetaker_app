@@ -4,13 +4,15 @@ const express = require('express');
 const fs = require("fs");
 // uuid for unique user id 
 const { v4: uuidv4 } = require ('uuid');
-const { error } = require("console");
+const fsutils = require ('./helper/fsutils')
+// const { error } = require("console");
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-app.use(express.static("db"));
+// app.use(express.static("db"));
 
 
 //routing for index file 
@@ -25,19 +27,22 @@ app.get('/notes',(req,res) => {
 });
 
 //index.html 
-app.get("/api/notes",(req,res) => {
-    res.sendFile(path.join(__dirname,"./public/index.html"));
-});
+// app.get("/api/notes",(req,res) => {
+//     res.sendFile(path.join(__dirname,"./public/index.html"));
+// });
 
+app.get("/", (req,res) => {
+    res.sendFile(path.join(__dirname,"./public/index.html"))
+})
 
 // setting up the get api route for notes 
 app.get('/api/notes', (req,res) => {
     fs.readFile('./db/db.json', 'utf-8',(err,file) => {
         if(err) throw err;
-        const parseFile = JSON.parse(file);
-        return res.send(parseFile);
-    })
-})
+        // const parseFile = 
+        res.json(JSON.parse(file))  ;
+    });
+});
 
 //setting up post api route 
 app.post('/api/notes',(req,res) => {
@@ -47,9 +52,11 @@ app.post('/api/notes',(req,res) => {
     newNote["text"] = req.body.text;
 
 
-    fs.readfile('./db/db.json','utf-8'),(err, data) => {
+    fs.readFile('./db/db.json','utf-8', (error, file) => {
+        if (error) throw error;
+
         const parseFile = JSON.parse(file);
-        parseFile.push(note);
+        parseFile.push(newNote);
 
         const modifiedFile = JSON.stringify(parseFile);
 
@@ -60,8 +67,8 @@ app.post('/api/notes',(req,res) => {
         });
 
         return res.send(JSON.parse(modifiedFile));
-    };
-})
+    });
+});
 
 
 // set up API for delete functionality 
